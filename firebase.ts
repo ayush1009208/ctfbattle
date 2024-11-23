@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth,signOut } from "firebase/auth"; // Firebase Authentication
+import { getAuth,signOut,onAuthStateChanged } from "firebase/auth"; // Firebase Authentication
 import { getFirestore } from "firebase/firestore"; // Firestore
 import { getStorage } from "firebase/storage"; // Firebase Storage (optional)
 
@@ -22,4 +22,4 @@ const db = getFirestore(app); // Firestore database
 const storage = getStorage(app); // Firebase Storage (optional, if you're using file storage)
 
 // Export Firebase services for use in other parts of your app
-export { app, auth, db, storage, signOut };
+export { app, auth, db, storage, signOut,onAuthStateChanged };
