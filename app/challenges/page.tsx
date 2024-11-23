@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Flag, Timer, Users } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"; // Import Dialog components
 
 const challenges = [
   {
@@ -40,9 +41,19 @@ export default function ChallengePage() {
     name: "John Doe",
     email: "johndoe@example.com",
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [roomName, setRoomName] = useState("");
+  const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Easy"); // Typing difficulty explicitly
+
+  // Map difficulty to numeric value
+  const difficultyMap = {
+    Easy: 1,
+    Medium: 2,
+    Hard: 3,
+  };
 
   const handleCreateRoom = async () => {
-    const apiBase = "https://8260-119-82-122-154.ngrok-free.app";
+    const apiBase = "https://0b64-119-82-122-154.ngrok-free.app";
 
     try {
       // Step 1: Add user to the database
@@ -58,7 +69,7 @@ export default function ChallengePage() {
         }),
       });
 
-      // Step 2: Create a new room
+      // Step 2: Create a new room with difficulty as a numeric value
       const createRoomResponse = await fetch(`${apiBase}/rooms/create`, {
         method: "POST",
         headers: {
@@ -66,7 +77,8 @@ export default function ChallengePage() {
         },
         body: JSON.stringify({
           roomid: roomId,
-          name: `Room ${roomId}`,
+          name: roomName || `Room ${roomId}`, // Default to `Room {id}` if no name is entered
+          difficulty: difficultyMap[difficulty], // Send the numeric value for difficulty
         }),
       });
 
@@ -92,6 +104,9 @@ export default function ChallengePage() {
 
       // Increment the room ID for the next creation
       setRoomId((prevRoomId) => prevRoomId + 1);
+
+      // Close the modal after room creation
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating room:", error);
     }
@@ -105,7 +120,41 @@ export default function ChallengePage() {
     <div className="container mx-auto px-16 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Active Rooms</h1>
-        <Button onClick={handleCreateRoom}>Create Room</Button>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setIsModalOpen(true)}>Create Room</Button>
+          </DialogTrigger>
+          <DialogContent className="w-full max-w-md p-8">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-semibold">Create New Room</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">
+              <Input
+                placeholder="Room Name"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block mb-2">Difficulty</label>
+              <select
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as "Easy" | "Medium" | "Hard")} // Typecast to the specific string union
+                className="w-full border p-2 rounded-md"
+              >
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleCreateRoom} className="w-full">
+                Create Room
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="relative mb-6">

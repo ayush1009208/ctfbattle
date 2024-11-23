@@ -44,7 +44,7 @@ const getRankIcon = (rank: number) => {
 
 export default function LeaderboardPage() {
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-16 py-8">
       <h1 className="text-4xl font-bold mb-8">Global Leaderboard</h1>
       
       <div className="space-y-4">

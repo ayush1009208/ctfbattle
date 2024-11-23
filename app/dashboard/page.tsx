@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from 'react';
 import { Trophy, Flag, Users, Target, Timer, Shield, Swords, Crown, Brain } from 'lucide-react';
 import LeaderboardCard from '@/components/leaderboard';
