@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,13 @@ import { doc, setDoc } from "firebase/firestore";
 import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie';
 
 export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [userId, setUserId] = useState<number | null>(null); // Added userId state
   const router = useRouter();
 
   useEffect(() => {
@@ -40,11 +41,12 @@ export default function Navbar() {
     setIsModalOpen(false);
   };
 
-  const sendUserDetails = async (user: any) => {
-    const url = "https://8260-119-82-122-154.ngrok-free.app/";
+  const sendUserDetails = async (user: any, userId: number) => {
+    const url = "https://106b-119-82-122-154.ngrok-free.app";
     const data = {
       email: user.email,
       name: user.displayName,
+      userId: userId.toString(), // Send userId as well
     };
 
     try {
@@ -71,8 +73,13 @@ export default function Navbar() {
     try {
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
-      await saveUserToDB(user);
-      await sendUserDetails(user); // Send user details to the external URL
+
+      const generatedUserId = Math.floor(Math.random() * 1000); // Generate random userId
+      setUserId(generatedUserId); // Set the generated userId to state
+      Cookies.set("userId", generatedUserId.toString(), { maxAge: 7 * 24 * 60 * 60 * 1000 }); // Set expiration in milliseconds
+      console.log(user, generatedUserId)
+      await saveUserToDB(user, generatedUserId);
+      await sendUserDetails(user, generatedUserId); // Send user details including userId
       closeModal();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -90,8 +97,12 @@ export default function Navbar() {
     try {
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
-      await saveUserToDB(user);
-      await sendUserDetails(user); // Send user details to the external URL
+
+      const generatedUserId = Math.floor(Math.random() * 1000); // Generate random userId
+      setUserId(generatedUserId); // Set the generated userId to state
+      Cookies.set("userId", generatedUserId.toString(), { maxAge: 7 * 24 * 60 * 60 * 1000 }); // Set expiration in milliseconds
+      // await saveUserToDB(user, generatedUserId);
+      await sendUserDetails(user, generatedUserId); // Send user details including userId
       closeModal();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -104,22 +115,30 @@ export default function Navbar() {
     }
   };
 
-  const saveUserToDB = async (user: any) => {
+  const saveUserToDB = async (user: any, userId: number) => {
     try {
+      const displayName = user.displayName || ""; // Fallback to an empty string if displayName is null or undefined
+  
+      // Split the display name into first and last name, assuming the format "First Last"
+      const [firstName, lastName] = displayName.split(" ");
+      
       await setDoc(doc(db, "users", user.uid), {
-        firstName: user.displayName?.split(" ")[0] || "",
-        lastName: user.displayName?.split(" ")[1] || "",
+        firstName: firstName || "", // Default to empty string if there's no first name
+        lastName: lastName || "", // Default to empty string if there's no last name
         email: user.email,
+        userId: userId,
       });
     } catch (err) {
       console.error("Error saving user to Firestore:", err);
     }
   };
+  
 
   const handleSignOut = async () => {
     try {
       await auth.signOut();
       setUser(null);
+      setUserId(null); // Clear the userId on sign out
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -130,6 +149,8 @@ export default function Navbar() {
       router.push("/dashboard");
     }
   };
+
+  
 
   return (
     <nav className="border-b">
